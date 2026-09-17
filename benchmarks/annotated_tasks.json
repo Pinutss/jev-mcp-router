@@ -1,0 +1,81 @@
+{
+  "version": "0.1.0",
+  "provider": "local",
+  "notes": "Baseline locale lexicale. Distinguer de tout essai JEV reel.",
+  "cases": [
+    {
+      "id": "read-file",
+      "query": "Lire le fichier README du workspace",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "filesystem_read",
+      "expected_decision": "select"
+    },
+    {
+      "id": "github-issues",
+      "query": "Chercher les issues GitHub du depot",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "github_search",
+      "expected_decision": "select"
+    },
+    {
+      "id": "browse-web",
+      "query": "Naviguer la page web du produit",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "browser",
+      "expected_decision": "select"
+    },
+    {
+      "id": "docs-search",
+      "query": "Chercher dans la documentation API du projet",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "docs_search",
+      "expected_decision": "select"
+    },
+    {
+      "id": "memory-select",
+      "query": "Selectionner les memoires pertinentes sous budget",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "memory_select",
+      "expected_decision": "select"
+    },
+    {
+      "id": "write-file",
+      "query": "Ecrire et editer le code source",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "filesystem_write",
+      "expected_decision": "select"
+    },
+    {
+      "id": "no-candidate",
+      "query": "Lancer un deploiement production immediat",
+      "required_permissions": ["deploy_prod"],
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected_decision": "abstain"
+    },
+    {
+      "id": "tool-failed",
+      "query": "Lire le fichier README du workspace",
+      "failed_tool_id": "filesystem_read",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "docs_search",
+      "expected_decision": "fallback"
+    },
+    {
+      "id": "tool-absent",
+      "query": "Lire le fichier README du workspace",
+      "failed_tool_id": "ghost-tool",
+      "scope": "demo",
+      "min_relevance": 0.0,
+      "expected": "filesystem_read",
+      "expected_decision": "fallback"
+    }
+  ]
+}

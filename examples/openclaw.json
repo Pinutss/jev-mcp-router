@@ -1,0 +1,19 @@
+{
+  "mcp": {
+    "servers": {
+      "jev-mcp": {
+        "command": "uv",
+        "args": [
+          "run",
+          "--directory",
+          "/path/to/jev-mcp-router",
+          "jev-mcp",
+          "mcp"
+        ],
+        "env": {
+          "JEV_PROVIDER": "local"
+        }
+      }
+    }
+  }
+}
