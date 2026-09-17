@@ -24,7 +24,7 @@ class McpSelector:
 
     def __init__(
         self,
-        provider: str = "local",
+        provider: str | None = None,
         *,
         api_key: str | None = None,
         jev_base_url: str | None = None,
@@ -36,22 +36,22 @@ class McpSelector:
         llm_prefer: str | None = None,
     ) -> None:
         env = settings or Settings.from_env()
-        name = provider.strip().lower()
+        requested = (provider if provider is not None else env.provider or "auto").strip().lower()
         use_env_defaults = settings is not None
-        self.provider_name = name
+        self.provider_name = requested
         self.settings = Settings(
-            provider=name,
+            provider=requested,
             jev_api_key=_coalesce(api_key, env.jev_api_key),
             jev_base_url=_coalesce(jev_base_url, env.jev_base_url),
             jev_model=env.jev_model,
             gateway_base_url=_coalesce(gateway_base_url, env.gateway_base_url),
             gateway_api_key=_coalesce(gateway_api_key, env.gateway_api_key),
             gateway_model=_coalesce(gateway_model, env.gateway_model),
-            min_relevance=env.min_relevance if (name == "jev" or use_env_defaults) else 0.0,
+            min_relevance=env.min_relevance,
             max_tools=env.max_tools,
             budget_tokens=env.budget_tokens,
             max_candidates=env.max_candidates,
-            redact_secrets=env.redact_secrets if use_env_defaults else name in {"jev", "custom"},
+            redact_secrets=env.redact_secrets,
             host=env.host,
             port=env.port,
             auth_token=env.auth_token,
@@ -63,8 +63,46 @@ class McpSelector:
             llm_prefer=_coalesce(llm_prefer, env.llm_prefer),
         )
         self._gateway_provider = gateway_provider
-        self._apply_catalog(gateway_provider=gateway_provider, llm_prefer=llm_prefer)
+        if requested in {"", "auto"}:
+            name = "jev" if self._probe_jev(gateway_provider, llm_prefer) else "local"
+        else:
+            name = requested
+            if name == "jev":
+                self._apply_catalog(
+                    gateway_provider=gateway_provider, llm_prefer=llm_prefer
+                )
+        if not use_env_defaults:
+            self.settings = replace(
+                self.settings,
+                min_relevance=env.min_relevance if name == "jev" else 0.0,
+                redact_secrets=name in {"jev", "custom"},
+            )
+        self.provider_name = name
+        self.settings = replace(self.settings, provider=name)
         self._validate()
+
+    def _gateway_ready(self) -> bool:
+        ollama = (self.settings.gateway_base_url or "").rstrip("/").endswith("11434/v1")
+        return bool(
+            self.settings.gateway_base_url
+            and self.settings.gateway_model
+            and (self.settings.gateway_api_key or ollama)
+        )
+
+    def _probe_jev(
+        self,
+        gateway_provider: str | None = None,
+        llm_prefer: str | None = None,
+    ) -> bool:
+        if not (self.settings.jev_api_key and self.settings.jev_base_url):
+            return False
+        if self._gateway_ready():
+            return True
+        try:
+            self._apply_catalog(gateway_provider=gateway_provider, llm_prefer=llm_prefer)
+        except ConfigurationError:
+            return False
+        return self._gateway_ready()
 
     def _apply_catalog(
         self,
@@ -72,7 +110,7 @@ class McpSelector:
         gateway_model: str | None = None,
         llm_prefer: str | None = None,
     ) -> None:
-        if self.provider_name != "jev":
+        if self.provider_name not in {"jev", "auto", ""}:
             return
         settings = self.settings
         incomplete = not (

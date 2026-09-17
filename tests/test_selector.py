@@ -6,6 +6,7 @@ from jev_mcp_router import (
     ToolProfile,
     redact_text,
 )
+from jev_mcp_router.config import Settings
 from jev_mcp_router.errors import ConfigurationError
 
 
@@ -278,6 +279,42 @@ def test_jev_provider_requires_keys(monkeypatch) -> None:
         assert "JEV_API_KEY" in str(exc)
     else:
         raise AssertionError("attendu ConfigurationError")
+
+
+def test_auto_without_keys_stays_local(monkeypatch) -> None:
+    for key in (
+        "JEV_API_KEY",
+        "JEV_BASE_URL",
+        "GATEWAY_API_KEY",
+        "GATEWAY_BASE_URL",
+        "GATEWAY_MODEL",
+        "OPENROUTER_API_KEY",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    selector = McpSelector(provider="auto")
+    assert selector.provider_name == "local"
+    result = selector.select(
+        query="Read a local file then search GitHub issues",
+        tools=DEFAULT_TOOLS,
+        max_tools=2,
+        budget_tokens=250,
+        min_relevance=0.0,
+        scope="demo",
+    )
+    assert result.decision == "select"
+
+
+def test_auto_with_keys_uses_jev() -> None:
+    settings = Settings(
+        provider="auto",
+        jev_api_key="jev_test",
+        jev_base_url="http://127.0.0.1:9",
+        gateway_api_key="gw",
+        gateway_base_url="https://openrouter.ai/api/v1",
+        gateway_model="demo",
+    )
+    selector = McpSelector(provider="auto", settings=settings)
+    assert selector.provider_name == "jev"
 
 
 def test_default_catalog_demo() -> None:
