@@ -1,16 +1,25 @@
 # jev-mcp-router
 
-Selection des outils MCP pertinents dans un budget de contexte.
+Selects the MCP tools that fit the query, inside a context budget.
 
-Auteur : [Pinuts](https://github.com/Pinutss). Licence MIT.
+Author: [Pinuts](https://github.com/Pinutss). MIT license.
 
-Fait partie de [JEV Labs](https://github.com/Pinutss/jev-labs).
+Part of [JEV Labs](https://github.com/Pinutss/jev-labs).
 
-Stack : Python 3.10+, HTTP, MCP stdio, Docker, HTML de demo.
+Stack: Python 3.10+, HTTP, MCP stdio, Docker, HTML demo.
 
-Apres `jev-mcp serve` : [demo](http://127.0.0.1:8080/)
+After `jev-mcp serve`: [demo](http://127.0.0.1:8080/)
 
-## Local, sans cle
+<p>
+  <img src="docs/preview/01-problem.png" alt="The problem" width="49%">
+  <img src="docs/preview/02-solution.png" alt="The solution" width="49%">
+</p>
+<p>
+  <img src="docs/preview/03-tool-budget.png" alt="Tool budget" width="49%">
+  <img src="docs/preview/04-works-everywhere.png" alt="Works everywhere" width="49%">
+</p>
+
+## Local, no keys
 
 ```bash
 git clone https://github.com/Pinutss/jev-mcp-router
@@ -20,23 +29,58 @@ uv run jev-mcp demo
 uv run jev-mcp serve
 ```
 
-`provider=local` par defaut si tu ne mets pas de cles. Docker :
+`provider=local` by default if you do not set keys. Docker:
 
 ```bash
 docker compose up
 ```
 
-## Ce que fait le prototype
+## What the prototype does
 
-Le selecteur choisit des outils dans un catalogue, sous un budget de
-jetons. Il justifie, s'abstient s'il n'y a pas de candidat sur, et
-n'autorise qu'un seul saut de repli.
+The selector chooses tools from a catalog, under a token budget. It explains the choice, abstains if no candidate is safe, and allows only one fallback hop.
 
-Il n'execute pas les outils et ne les fournit pas.
+It does not run tools and does not ship them.
 
-La selection n'est pas une autorisation. Les permissions viennent
-uniquement du catalogue et des contraintes de l'appelant. La tache, un
-outil ou un modele ne peuvent pas en ajouter.
+Selection is not authorization. Permissions come only from the catalog and the caller constraints. The task, a tool, or a model cannot add them.
+
+## Hermes and OpenClaw
+
+Yes, locally. The MCP process does not need JEV or a gateway:
+
+```bash
+uv run jev-mcp mcp
+```
+
+One tool: `mcp_select`. Pass `query` + `tools`. Keys stay in the process environment, not in the call.
+
+**Hermes** (`~/.hermes/config.yaml`):
+
+```yaml
+mcp_servers:
+  jev-mcp:
+    command: uv
+    args: ["run", "--directory", "/path/to/jev-mcp-router", "jev-mcp", "mcp"]
+    env:
+      JEV_PROVIDER: local
+```
+
+**OpenClaw** (`~/.openclaw/openclaw.json`, or Settings > MCP > Stdio):
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "jev-mcp": {
+        "command": "uv",
+        "args": ["run", "--directory", "/path/to/jev-mcp-router", "jev-mcp", "mcp"],
+        "env": { "JEV_PROVIDER": "local" }
+      }
+    }
+  }
+}
+```
+
+Copy-ready examples: `examples/hermes.yaml`, `examples/openclaw.json`.
 
 ## Python
 
@@ -44,7 +88,7 @@ outil ou un modele ne peuvent pas en ajouter.
 from jev_mcp_router import McpSelector, DEFAULT_TOOLS
 
 result = McpSelector(provider="local").select(
-    query="Lire un fichier local puis chercher des issues GitHub",
+    query="Read a local file, then search GitHub issues",
     tools=DEFAULT_TOOLS,
     max_tools=2,
     budget_tokens=250,
@@ -53,61 +97,19 @@ result = McpSelector(provider="local").select(
 print(result.decision, [item.id for item in result.selected])
 ```
 
-## Hermes et OpenClaw
+## JEV + gateway (optional)
 
-Oui, en local. Le process MCP n'a pas besoin de JEV ni de gateway :
+If you wire the cloud later, two keys are enough: `JEV_API_KEY` / `JEV_BASE_URL`, and your gateway. If `GATEWAY_*` is incomplete, the multi-LLM catalog resolves the judge (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and similar).
 
-```bash
-uv run jev-mcp mcp
-```
-
-Un tool : `mcp_select`. Tu lui passes `query` + `tools`. Tes cles restent
-dans l'environnement du process, pas dans l'appel.
-
-**Hermes** (`~/.hermes/config.yaml`) :
-
-```yaml
-mcp_servers:
-  jev-mcp:
-    command: uv
-    args: ["run", "--directory", "/chemin/vers/jev-mcp-router", "jev-mcp", "mcp"]
-    env:
-      JEV_PROVIDER: local
-```
-
-**OpenClaw** (`~/.openclaw/openclaw.json`, ou Settings > MCP > Stdio) :
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "jev-mcp": {
-        "command": "uv",
-        "args": ["run", "--directory", "/chemin/vers/jev-mcp-router", "jev-mcp", "mcp"],
-        "env": { "JEV_PROVIDER": "local" }
-      }
-    }
-  }
-}
-```
-
-Exemples prets a copier : `examples/hermes.yaml`, `examples/openclaw.json`.
-
-## JEV + gateway (optionnel)
-
-Si tu branches le cloud plus tard, deux cles suffisent : `JEV_API_KEY` /
-`JEV_BASE_URL`, et ta gateway. Si `GATEWAY_*` est incomplet, le catalogue
-multi-LLM resout le juge (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, etc.).
-
-Pas de cle dans le corps HTTP ou MCP.
+No key in the HTTP or MCP body.
 
 ```bash
 cp .env.example .env
 ```
 
-`JEV_PROVIDER=jev` refuse de demarrer si JEV ou la gateway resolue manque.
+`JEV_PROVIDER=jev` will not start if JEV or the resolved gateway is missing.
 
-Catalogue public : `GET /v1/llms`. Exemple JSON : `examples/models.json`.
+Public catalog: `GET /v1/llms`. JSON example: `examples/models.json`.
 
 ## HTTP
 
@@ -115,23 +117,18 @@ Catalogue public : `GET /v1/llms`. Exemple JSON : `examples/models.json`.
 uv run jev-mcp serve
 ```
 
-`GET /`, `/demo`, `/healthz`, `/v1/llms`. `POST /v1/select`. Bind
-`127.0.0.1`. Le body ne contient pas de cles. Il peut contenir
-`gateway_provider`, `gateway_model`, `llm_prefer`.
+`GET /`, `/demo`, `/healthz`, `/v1/llms`. `POST /v1/select`. Binds `127.0.0.1`. The body must not contain keys. It may contain `gateway_provider`, `gateway_model`, `llm_prefer`.
 
-## Validation locale
+## Local validation
 
 ```bash
 uv run jev-mcp benchmark
 ```
 
-Jeu annote dans `benchmarks/annotated_tasks.json`. C'est une baseline
-locale, pas un essai JEV reel.
+Annotated set in `benchmarks/annotated_tasks.json`. This is a local baseline, not a live JEV trial.
 
-## Limites
+## Limits
 
-Le tri local est lexical et deterministe. Le scope isole des listes, ce
-n'est pas une auth. Un seul saut de repli. Pas d'execution d'outil. Pas
-de store, pas de PyPI pour l'instant.
+Local ranking is lexical and deterministic. Scope isolates lists, it is not auth. One fallback hop. No tool execution. No store, no PyPI yet.
 
-`docs/vision.md` est une cible longue, pas le contrat actuel.
+`docs/vision.md` is a long-term target, not the current contract.
