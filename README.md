@@ -115,7 +115,7 @@ print(result.decision, [item.id for item in result.selected])
 
 ## JEV + gateway (optional)
 
-If you wire the cloud later, two keys are enough: `JEV_API_KEY` / `JEV_BASE_URL`, and your gateway. If `GATEWAY_*` is incomplete, the multi-LLM catalog resolves the judge (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and similar).
+If you wire the cloud later, two keys are enough: `JEV_API_KEY` / `JEV_BASE_URL`, and your gateway. If `GATEWAY_*` is incomplete, the multi-LLM catalog resolves the judge. Vendor keys stay in the environment and each is sent only to its own vendor (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, and the other catalog presets). A custom judge endpoint is discovered by scanning env for `JEV_LLM_<NAME>_BASE_URL` (plus `JEV_LLM_<NAME>_API_KEY` / `JEV_LLM_<NAME>_MODELS`); that key is used only against that base URL.
 
 No key in the HTTP or MCP body.
 
