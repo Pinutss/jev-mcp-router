@@ -1,0 +1,36 @@
+{
+  "name": "jev-mcp-router",
+  "displayName": "JEV MCP Router",
+  "version": "0.1.0",
+  "description": "Selects MCP tools that fit the query inside a context budget, without executing them.",
+  "author": {
+    "name": "Pinuts",
+    "url": "https://github.com/Pinutss"
+  },
+  "homepage": "https://github.com/Pinutss/jev-mcp-router",
+  "repository": "https://github.com/Pinutss/jev-mcp-router",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "tool-selection",
+    "context-budget",
+    "jev"
+  ],
+  "logo": "assets/logo.svg",
+  "category": "tools",
+  "mcpServers": {
+    "jev-mcp": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "${CURSOR_PLUGIN_ROOT}",
+        "jev-mcp",
+        "mcp"
+      ],
+      "env": {
+        "JEV_PROVIDER": "local"
+      }
+    }
+  }
+}

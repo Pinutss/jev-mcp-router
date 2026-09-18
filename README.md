@@ -43,6 +43,24 @@ It does not run tools and does not ship them.
 
 Selection is not authorization. Permissions come only from the catalog and the caller constraints. The task, a tool, or a model cannot add them.
 
+## Cursor and Hermes plugin
+
+This repository is an [Agent Plugin](https://agent-plugins.org/). Cursor and Hermes can install it directly.
+
+**Hermes**
+
+```bash
+hermes plugins install Pinutss/jev-mcp-router --enable
+```
+
+**Cursor**
+
+Install from the [JEV plugins marketplace](https://github.com/Pinutss/jev-plugins), or copy this folder to `~/.cursor/plugins/local/jev-mcp-router`.
+
+One tool: `mcp_select`. Pass `query` + `tools`. Keys stay in the process environment, not in the call.
+
+Requires [uv](https://docs.astral.sh/uv/). `JEV_PROVIDER` defaults to `local`.
+
 ## Hermes and OpenClaw
 
 Yes, locally. The MCP process does not need JEV or a gateway:
