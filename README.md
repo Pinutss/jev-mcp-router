@@ -80,8 +80,6 @@ mcp_servers:
 }
 ```
 
-Copy-ready examples: `examples/hermes.yaml`, `examples/openclaw.json`.
-
 ## Python
 
 ```python
@@ -109,7 +107,7 @@ cp .env.example .env
 
 `JEV_PROVIDER=jev` will not start if JEV or the resolved gateway is missing. With `auto`, missing keys just keep the local heuristic.
 
-Public catalog: `GET /v1/llms`. JSON example: `examples/models.json`.
+Public catalog: `GET /v1/llms`. You can also point `JEV_MODELS_FILE` at a JSON catalog.
 
 ## HTTP
 
