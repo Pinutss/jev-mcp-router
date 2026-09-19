@@ -135,6 +135,9 @@ def _read_message(stdin: Any) -> dict[str, Any] | None:
 
 
 def _write_message(stdout: Any, message: dict[str, Any]) -> None:
+    # MCP stdio transport (spec 2024-11-05): newline-delimited JSON on stdout.
+    # Content-Length (LSP-style) framing breaks standard MCP clients like the
+    # Python SDK, which read line by line.
     raw = json.dumps(message, ensure_ascii=False).encode("utf-8")
-    stdout.write(f"Content-Length: {len(raw)}\r\n\r\n".encode("ascii") + raw)
+    stdout.write(raw + b"\n")
     stdout.flush()
