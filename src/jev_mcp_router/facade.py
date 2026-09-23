@@ -206,7 +206,7 @@ class McpSelector:
                 base_url=self.settings.jev_base_url or "",
                 api_key=self.settings.jev_api_key,
                 timeout=self.settings.request_timeout,
-                selector=self._local_selector(),
+                selector=self._hybrid_selector(),
             ).select(profiles, request)
         if self.provider_name == "mock":
             return MockProvider().select(profiles, request)
